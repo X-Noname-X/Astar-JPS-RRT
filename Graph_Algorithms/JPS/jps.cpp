@@ -2,9 +2,9 @@
 
 void Node::PathCost(Node* currentnode, std::pair<int, int> goal_)
 {
-	this->Parents = currentnode;
-	this->H = abs(this->NodePos.first - goal_.first) + abs(this->NodePos.second - goal_.second);
-	this->F = this->H;
+	Parents = currentnode;
+	H = abs(this->NodePos.first - goal_.first) + abs(this->NodePos.second - goal_.second);
+	F = this->H;
 }
 
 JPS::JPS(std::pair<int, int> mapsize)
@@ -12,60 +12,75 @@ JPS::JPS(std::pair<int, int> mapsize)
 	this->MapSize = mapsize;
 	for (int i = 0; i < MapSize.first; i++)
 	{
-		std::vector<Node> mapline; //初始化内嵌容器，存储地图的每一行
+		std::vector<int> mapline;
 		for (int j = 0; j < MapSize.second; j++)
 		{
-			Node node; //初始化节点
-			//节点坐标赋值
-			node.NodePos.first = i;
-			node.NodePos.second = j;
-			//将节点放进内嵌容器中
-			mapline.push_back(node);
+			mapline.push_back(0);
 		}
-		this->Map.push_back(mapline); //将每一行内嵌容器放进地图中
+		Map.push_back(mapline);
 	}
 }
 
-void JPS::SetBlock(std::vector<std::pair<int, int>> block)
+std::pair<Node, std::list<Node>::iterator> JPS::getfLeastNode() //返回最小F的点
 {
-	//遍历障碍物容器，将地图中对应的节点设为障碍物
-	for (std::vector<std::pair<int, int>>::iterator it = block.begin(); it != block.end(); it++)
-	{
-		this->Map[it->first][it->second].Block = true;
+	Node resNode = OpenList.front();  //返回第一个元素
+	std::list<Node>::iterator iT = OpenList.begin();
+	for (std::list<Node>::iterator it = OpenList.begin(); it != OpenList.end(); it++) {
+		if (it->F < resNode.F)
+		{
+			resNode = *it;
+			iT = it;
+		}
 	}
+	return { resNode,iT };
 }
-std::pair<int, int> _JumpNode_ = {0,0}; //全局
+
+bool JPS::isInList(std::list<Node> List, Node searchNode)
+{
+	for (auto& node : List) {
+		if (node.NodePos == searchNode.NodePos)
+			return true;
+	}
+	return false;
+}
+
 bool JPS::SearchPath(std::pair<int, int> start, std::pair<int, int> goal)
 {
-	this->StartNode = start;
-	this->GoalNode = goal;
+	Node StartNode; StartNode.NodePos = start; StartNode.State = true;
+	GoalNode.NodePos = goal; GoalNode.State = true;
 	//添加起点的遍历方向（8个方向都要遍历）
-	for (auto& motion : this->motions)
-		this->Map[this->StartNode.first][this->StartNode.second].SearchMotion.push_back({motion[0],motion[1]});
-	this->OpenList.push_back(this->Map[start.first][start.second]);  //先将起点放入open表中
-	//定义仿函数用于比较两个Node对象的f值
-	struct CompareNodes { bool operator()(const Node& lf, const Node& rf) const { return lf.F < rf.F; } };
+	for (auto& motion : motions)
+		StartNode.SearchMotion.push_back({motion[0],motion[1]});
+	OpenList.push_back(StartNode);  //先将起点放入open表中
 
-	while (!this->OpenList.empty())
+	while (!OpenList.empty())
 	{
-		std::sort(this->OpenList.begin(), this->OpenList.end(), CompareNodes());
-		//取出F值最小的节点，即open表首元素
-		Node fLeastNode = this->OpenList[0];
-		this->OpenList.erase(this->OpenList.begin()); //移除open表首元素
-		this->CloseList.push_back(fLeastNode);
-		if (fLeastNode.NodePos == this->GoalNode)
+		auto Result = getfLeastNode();
+		Node fLeastNode = Result.first;
+		OpenList.erase(Result.second); //移除open表首元素
+		CloseList.push_back(fLeastNode);
+		if (fLeastNode.NodePos == goal)
+		{
+			Node tmp_node;
+			tmp_node = fLeastNode;
+			PathNode.push_back(&CloseList.back());
+			while (tmp_node.Parents != nullptr) //起点的父节点指针指向nullptr
+			{
+				PathNode.push_back(tmp_node.Parents);
+				tmp_node = *(tmp_node.Parents);
+			}
 			return true;
+		}
 		for (auto& motion : fLeastNode.SearchMotion)
 		{
 			int temp_motion[2] = {motion.first,motion.second};
-			bool jumpnode = Jump(fLeastNode, temp_motion,1);
-			if (jumpnode)
+			Node jumpnode = Jump(fLeastNode, temp_motion,1);
+			if (jumpnode.State)
 			{
-				if (find(OpenList.begin(), OpenList.end(), _JumpNode_) == OpenList.end()) //不在open表
+				if (!isInList(OpenList,jumpnode)) //不在open表
 				{
-					this->Map[_JumpNode_.first][_JumpNode_.second].PathCost(
-					&(this->Map[fLeastNode.NodePos.first][fLeastNode.NodePos.second]),this->GoalNode);
-					this->OpenList.push_back(this->Map[_JumpNode_.first][_JumpNode_.second]);
+					jumpnode.PathCost(&CloseList.back(), goal);
+					OpenList.push_back(jumpnode);
 				}
 			}
 		}
@@ -73,76 +88,54 @@ bool JPS::SearchPath(std::pair<int, int> start, std::pair<int, int> goal)
 	return false;
 }
 
-bool operator==(const Node& node, const std::pair<int, int> snode)
-{
-	if (node.NodePos == snode) return true;
-	else return false;
-}
-
 int goal_flag = 0;
-bool JPS::Jump(Node currentnode, int motion[],int flag)
+Node JPS::Jump(Node currentnode, int motion[],int flag)
 {
-	std::pair<int, int> JumpNode; //局部
+	Node JumpNode; JumpNode.State = true;
 	//节点坐标按方向递增
-	JumpNode.first = currentnode.NodePos.first + motion[0];
-	JumpNode.second = currentnode.NodePos.second + motion[1];
+	JumpNode.NodePos.first = currentnode.NodePos.first + motion[0];
+	JumpNode.NodePos.second = currentnode.NodePos.second + motion[1];
 	//判断是否边界
-	if (JumpNode.first < 0 || JumpNode.first >= this->MapSize.first ||
-		JumpNode.second < 0 || JumpNode.second >= this->MapSize.second)
-		return false;
+	if (JumpNode.NodePos.first < 0 || JumpNode.NodePos.first >= MapSize.first ||
+		JumpNode.NodePos.second < 0 || JumpNode.NodePos.second >= MapSize.second)
+		return {};
 	//判断是否为障碍物或者已在close表
-	if (this->Map[JumpNode.first][JumpNode.second].Block ||
-		find(CloseList.begin(), CloseList.end(), JumpNode) != CloseList.end())
-		return false;
+	if (Map[JumpNode.NodePos.first][JumpNode.NodePos.second] || isInList(CloseList,JumpNode))
+		return {};
 	//判断是否为目标点
-	if (this->Map[JumpNode.first][JumpNode.second].NodePos == this->GoalNode)
-	{
-		if (flag) //独立直线扩展
-		{
-			_JumpNode_ = this->GoalNode;
-		}
-		goal_flag = 1;
-		return true;
-	}
+	if (JumpNode.NodePos == GoalNode.NodePos)
+		return JumpNode;
 	//检测强迫邻居
-	bool fNeighbor = DelectForceNeighbor(this->Map[JumpNode.first][JumpNode.second],motion,flag);
+	bool fNeighbor = DelectForceNeighbor(JumpNode,motion,flag);
 	if (fNeighbor)
 	{
 		if (flag) {
-			_JumpNode_ = JumpNode;
 			//添加SearchMotion（扩展方向）父节点到该节点的扩展方向
-			this->Map[JumpNode.first][JumpNode.second].SearchMotion.push_back({ motion[0],motion[1] });
+			JumpNode.SearchMotion.push_back({ motion[0],motion[1] });
 			//以及该节点到强迫邻居的扩展方向（遍历强迫邻居列表）
-			for (std::vector<std::pair<int, int>>::iterator it = this->Map[JumpNode.first][JumpNode.second].ForceNeighborList.begin();
-				it != this->Map[JumpNode.first][JumpNode.second].ForceNeighborList.end(); it++)
-				this->Map[JumpNode.first][JumpNode.second].SearchMotion.push_back({ it->first,it->second });
+			for (std::vector<std::pair<int, int>>::iterator it = JumpNode.ForceNeighborList.begin();
+				it != JumpNode.ForceNeighborList.end(); it++)
+				JumpNode.SearchMotion.push_back({ it->first,it->second });
 		}
-		return true;
+		return JumpNode;
 	}
 	//如果是对角扩展，还需调用纵向和横向的扩展
 	if (motion[0] != 0 && motion[1] != 0)
 	{
 		int y_motion[2] = {motion[0],0};
 		int x_motion[2] = {0,motion[1]};
-		if (Jump(this->Map[JumpNode.first][JumpNode.second], x_motion, 0) || 
-			Jump(this->Map[JumpNode.first][JumpNode.second], y_motion, 0))
+		if (Jump(JumpNode, x_motion, 0).State || Jump(JumpNode, y_motion, 0).State)
 		{
-			_JumpNode_ = JumpNode;
-			this->Map[JumpNode.first][JumpNode.second].SearchMotion.push_back({ 0,motion[1] });
-			this->Map[JumpNode.first][JumpNode.second].SearchMotion.push_back({ motion[0],0 });
-			this->Map[JumpNode.first][JumpNode.second].SearchMotion.push_back({ motion[0],motion[1] });
-			if (goal_flag)
-			{
-				goal_flag = 0;
-				this->Map[this->GoalNode.first][this->GoalNode.second].Parents = &(this->Map[JumpNode.first][JumpNode.second]);
-			}
-			return true;
+			JumpNode.SearchMotion.push_back({ 0,motion[1] });
+			JumpNode.SearchMotion.push_back({ motion[0],0 });
+			JumpNode.SearchMotion.push_back({ motion[0],motion[1] });
+			return JumpNode;
 		}
 	}
-	return Jump(this->Map[JumpNode.first][JumpNode.second], motion, 1);
+	return Jump(JumpNode, motion, 1);
 }
 
-bool JPS::DelectForceNeighbor(Node currentnode,int motion[],int flag)
+bool JPS::DelectForceNeighbor(Node &currentnode,int motion[],int flag)
 {
 	int y = currentnode.NodePos.first;
 	int x = currentnode.NodePos.second;
@@ -150,43 +143,42 @@ bool JPS::DelectForceNeighbor(Node currentnode,int motion[],int flag)
 	if (motion[0] == 0 && motion[1] != 0)
 	{
 		//防止数组溢出
-		if ((y+1>=0 && y+1<this->MapSize.first) && (x+motion[1] >= 0 && x+motion[1] < this->MapSize.second))
+		if ((y+1>=0 && y+1<MapSize.first) && (x+motion[1] >= 0 && x+motion[1] < MapSize.second))
 		{
 			//强迫邻居判断
-			if (this->Map[y + 1][x].Block == true && this->Map[y + 1][x + motion[1]].Block == false)
+			if (Map[y + 1][x] != 0 && Map[y + 1][x + motion[1]] == 0)
 			{
-				if(flag) this->Map[y][x].ForceNeighborList.push_back({1,motion[1]}); //添加强迫邻居的方向到列表
+				if(flag) currentnode.ForceNeighborList.push_back({1,motion[1]}); //添加强迫邻居的方向到列表
 				return true;
 			}
 		}
 		//防止数组溢出
-		if ((y - 1 >= 0 && y - 1 < this->MapSize.first) && (x + motion[1] >= 0 && x + motion[1] < this->MapSize.second))
+		if ((y - 1 >= 0 && y - 1 < MapSize.first) && (x + motion[1] >= 0 && x + motion[1] < MapSize.second))
 		{
 			//强迫邻居判断
-			if (this->Map[y - 1][x].Block == true && this->Map[y - 1][x + motion[1]].Block == false)
+			if (Map[y - 1][x] != 0 && Map[y - 1][x + motion[1]] == 0)
 			{
-				if(flag) this->Map[y][x].ForceNeighborList.push_back({ -1,motion[1] }); //添加强迫邻居的方向到列表
+				if(flag) currentnode.ForceNeighborList.push_back({ -1,motion[1] }); //添加强迫邻居的方向到列表
 				return true;
 			}
 		}
-			
 	}
 	//纵向扩展
 	else if (motion[0] != 0 && motion[1] == 0)
 	{
-		if ((x + 1 >= 0 && x + 1 < this->MapSize.second) && (y + motion[0] >= 0 && y + motion[0] < this->MapSize.first))
+		if ((x + 1 >= 0 && x + 1 < MapSize.second) && (y + motion[0] >= 0 && y + motion[0] < MapSize.first))
 		{
-			if (this->Map[y][x + 1].Block == true && this->Map[y + motion[0]][x + 1].Block == false)
+			if (Map[y][x + 1] != 0 && Map[y + motion[0]][x + 1] == 0)
 			{
-				if(flag) this->Map[y][x].ForceNeighborList.push_back({ motion[0],1 }); //添加强迫邻居的方向到列表
+				if(flag) currentnode.ForceNeighborList.push_back({ motion[0],1 }); //添加强迫邻居的方向到列表
 				return true;
 			}
 		}
-		if ((x - 1 >= 0 && x - 1 < this->MapSize.second) && (y + motion[0] >= 0 && y + motion[0] < this->MapSize.first))
+		if ((x - 1 >= 0 && x - 1 < MapSize.second) && (y + motion[0] >= 0 && y + motion[0] < MapSize.first))
 		{
-			if (this->Map[y][x - 1].Block == true && this->Map[y + motion[0]][x - 1].Block == false)
+			if (Map[y][x - 1] != 0 && Map[y + motion[0]][x - 1] == 0)
 			{
-				if(flag) this->Map[y][x].ForceNeighborList.push_back({ motion[0],-1 }); 
+				if(flag) currentnode.ForceNeighborList.push_back({ motion[0],-1 });
 				return true;
 			}
 		}
@@ -194,19 +186,19 @@ bool JPS::DelectForceNeighbor(Node currentnode,int motion[],int flag)
 	//对角扩展
 	else if(motion[0] != 0 && motion[1] != 0)
 	{
-		if ((x - motion[1]>=0 && x - motion[1]<this->MapSize.second) && (y + motion[0]>=0 && y + motion[0] < this->MapSize.first))
+		if ((x - motion[1]>=0 && x - motion[1]<MapSize.second) && (y + motion[0]>=0 && y + motion[0] < MapSize.first))
 		{
-			if (this->Map[y][x - motion[1]].Block == true && this->Map[y + motion[0]][x - motion[1]].Block == false)
+			if (Map[y][x - motion[1]] != 0 && Map[y + motion[0]][x - motion[1]] == 0)
 			{
-				if(flag) this->Map[y][x].ForceNeighborList.push_back({ motion[0],-motion[1]}); //添加强迫邻居的方向到列表
+				if(flag) currentnode.ForceNeighborList.push_back({ motion[0],-motion[1]}); //添加强迫邻居的方向到列表
 				return true;
 			}
 		}
-		if ((x + motion[1] >= 0 && x + motion[1] < this->MapSize.second) && (y - motion[0] >= 0 && y - motion[0] < this->MapSize.first))
+		if ((x + motion[1] >= 0 && x + motion[1] < MapSize.second) && (y - motion[0] >= 0 && y - motion[0] < MapSize.first))
 		{
-			if (this->Map[y - motion[0]][x].Block == true && this->Map[y - motion[0]][x + motion[1]].Block == false)
+			if (Map[y - motion[0]][x] != 0 && Map[y - motion[0]][x + motion[1]] == 0)
 			{
-				if(flag) this->Map[y][x].ForceNeighborList.push_back({ -motion[0],motion[1] }); //添加强迫邻居的方向到列表
+				if(flag) currentnode.ForceNeighborList.push_back({ -motion[0],motion[1] }); //添加强迫邻居的方向到列表
 				return true;
 			}
 		}
@@ -214,47 +206,14 @@ bool JPS::DelectForceNeighbor(Node currentnode,int motion[],int flag)
 	return false;
 }
 
-void JPS::ShowMap()
-{
-	std::cout << "----------显示地图----------" << std::endl;
-	//下面遍历用到的[]是重载过的，因此用法类似数组
-	for (int i = this->MapSize.first - 1; i >= 0; i--)
-	{
-		for (int j = 0; j < this->MapSize.second; j++)
-		{
-			std::cout << "(" << this->Map[i][j].NodePos.first << "," << this->Map[i][j].NodePos.second
-				<< ")" << "/" << this->Map[i][j].Block << " ";
-		}
-		std::cout << std::endl;
-	}
-}
-
 void JPS::ShowPath()
 {
-	std::stack<Node> Stk; //定义一个栈，使路径节点能正向显示
-	Node PathNode = this->Map[this->GoalNode.first][this->GoalNode.second];
-	Stk.push(PathNode); //终点先入栈
-	while (true)
-	{
-		PathNode = *(PathNode.Parents);
-		Stk.push(PathNode);
-		if (PathNode.NodePos == this->StartNode)
-			break;
-	}
-	std::cout << "----------显示最短路径----------" << std::endl;
-	while (!Stk.empty())
-	{
-		if (Stk.size() != 1)
-		{
-			std::cout << "(" << Stk.top().NodePos.first << ","
-				<< Stk.top().NodePos.second << ")" << " -> ";
-		}
+	std::cout << "----------显示路径----------" << std::endl;
+	for (int i = PathNode.size() - 1; i >= 0; --i) {
+		if (i != 0)
+			std::cout << "(" << PathNode[i]->NodePos.first << "," << PathNode[i]->NodePos.second << ")" << "->";
 		else
-		{
-			std::cout << "(" << Stk.top().NodePos.first << ","
-				<< Stk.top().NodePos.second << ")";
-		}
-		Stk.pop(); //栈顶元素出栈
+			std::cout << "(" << PathNode[i]->NodePos.first << "," << PathNode[i]->NodePos.second << ")";
 	}
 	std::cout << std::endl;
 }

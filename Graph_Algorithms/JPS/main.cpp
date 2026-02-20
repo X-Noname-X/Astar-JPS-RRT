@@ -2,14 +2,14 @@
 
 int main()
 {
-	JPS jps({ 10,10 }); //operater{}  
-	jps.SetBlock({ {1,2},{1,3},{1,4},{1,5},{1,6},{1,7},
-					 {7,1},{7,2},{7,3},{7,4},{7,5},{7,6},
-					 {2,7},{3,7},{4,7},{6,7},{7,7},{8,7},
-					 {2,5},{3,5},{5,5},{6,5},{7,5},
-					 {2,3},{3,3},{4,3},{5,3},{7,3}, });
-	jps.ShowMap();
-	bool path = jps.SearchPath({ 1,0 }, { 6,9 });
+	JPS jps({ 10,10 }); //operater{} 
+	for (int i=3;i<=7;i++) jps.Map[1][i] = 1;
+	for (int i = 2; i <= 7; i++) jps.Map[8][i] = 1;
+	for (int i = 2; i <= 7; i++) jps.Map[i][7] = 1;
+	bool path = jps.SearchPath({ 1,0 }, { 7,8 });
+	//JPS jps({ 3,3 });
+	//jps.Map[0][1] = 1;
+	//bool path = jps.SearchPath({ 0,0 }, { 0,2 });
 	if (path) jps.ShowPath();
 	return 0;
 }
