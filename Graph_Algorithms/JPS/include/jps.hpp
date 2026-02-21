@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef _JPS_H_
 #define _JPS_H_
 #include <iostream>

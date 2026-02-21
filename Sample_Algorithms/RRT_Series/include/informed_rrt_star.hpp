@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef _INFORMED_RRT_STAR_
 #define _INFORMED_RRT_STAR_
 #include "rrt_star.hpp"
@@ -10,7 +10,7 @@ public:
 	bool PathSearch_IN_RRTSTAR(std::pair<float, float> start, std::pair<float, float> goal);
 	std::pair<float, float> Informed_SampleNode(float Cmax, float Cmin,
 		std::vector<std::vector<float>> Xcenter, std::vector<std::vector<float>> C);
-	std::vector<std::vector<float>> SampleUnitBall();  //??��??????
+	std::vector<std::vector<float>> SampleUnitBall();  //在单位球中采样
 };
 
 #endif // !_INFORMED_RRT_STAR_

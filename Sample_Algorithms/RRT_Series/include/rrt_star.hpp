@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef _RRT_STAR_H_
 #define _RRT_STAR_H_
 #include "common.hpp"

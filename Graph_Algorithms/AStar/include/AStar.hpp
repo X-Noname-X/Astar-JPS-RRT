@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef _ASTAR_H_
 #define _ASTAR_H_
 #include <iostream>

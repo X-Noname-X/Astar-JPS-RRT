@@ -1,4 +1,4 @@
-#include "common.hpp"
+﻿#include "common.hpp"
 
 bool Common::isInBlock(std::pair<float, float> samplenode)
 {
