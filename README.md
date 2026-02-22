@@ -28,9 +28,21 @@ To be completed
 
 ## 🛠️ Running
 ### Windows
-If everything goes well, you will see the following files in the path \Astar-JPS-RRT\build\bin\Debug: Astar.exe, JPS.exe, RRT_Series.exe
-**Run directly by double-clicking the .exe files, or enter Astar.exe in the terminal**
-**Note:** Switch between RRT, RRT_star, and Informed_RRT_star by modifying the macro definitions (#define) in the main.cpp file under \Astar-JPS-RRT\Sample_Algorithms\RRT_Series\src
+- If everything goes well, you will see the following files in the path \Astar-JPS-RRT\build\bin\Debug: Astar.exe, JPS.exe, RRT_Series.exe
+- **Run directly by double-clicking the .exe files, or enter Astar.exe in the terminal**
+- **Note:** Switch between RRT, RRT_star, and Informed_RRT_star by modifying the macro definitions (#define) in the main.cpp file under \Astar-JPS-RRT\Sample_Algorithms\RRT_Series\src
 
 ### Ubuntu
 To be completed
+
+## 🎮 Results
+Visualization for the Astar and JPS algorithms is currently not implemented.
+| Astar | ![Astar](./assets/astar.jpg) |
+|:---:|:---:|
+
+| JPS | ![JPS](./assets/jps.jpg) |
+|:---:|:---:|
+
+| RRT | RRT* | Informed RRT* |
+|:---:|:---:|:---:|
+| ![RRT](./assets/rrt.gif) | ![RRT*](./assets/rrtstar.gif) | ![Informed RRT*](./assets/infrrt.gif) |

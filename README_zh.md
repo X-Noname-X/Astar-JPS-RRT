@@ -28,9 +28,21 @@ cmake --build .
 
 ## 🛠️ 运行
 ### Windows
-如果一切顺利的话，会在 \Astar-JPS-RRT\build\bin\Debug 路径下看到：Astar.exe, JPS.exe, RRT_Series.exe
-**直接点击.exe文件，或者在终端输入Astar.exe即可运行**
-**注意：** 通过修改 \Astar-JPS-RRT\Sample_Algorithms\RRT_Series\src 的main.cpp文件中的宏定义（#define），实现RRT，RRT_star和Informed_RRT_star的切换
+- 如果一切顺利的话，会在 \Astar-JPS-RRT\build\bin\Debug 路径下看到：Astar.exe, JPS.exe, RRT_Series.exe
+- **直接点击.exe文件，或者在终端输入Astar.exe即可运行**
+- **注意：** 通过修改 \Astar-JPS-RRT\Sample_Algorithms\RRT_Series\src 的main.cpp文件中的宏定义（#define），实现RRT，RRT_star和Informed_RRT_star的切换
 
 ### Ubuntu
 待完成
+
+## 🎮 效果
+Astar和JPS算法暂时没有可视化
+| Astar | ![Astar](./assets/astar.jpg) |
+|:---:|:---:|
+
+| JPS | ![JPS](./assets/jps.jpg) |
+|:---:|:---:|
+
+| RRT | RRT* | Informed RRT* |
+|:---:|:---:|:---:|
+| ![RRT](./assets/rrt.gif) | ![RRT*](./assets/rrtstar.gif) | ![Informed RRT*](./assets/infrrt.gif) |
