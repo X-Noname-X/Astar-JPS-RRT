@@ -1,4 +1,8 @@
 ﻿# <p align="center">Astar-JPS-RRT</p>
+<p align="center">
+  🌏 English | <a href="README_zh.md">🇨🇳 中文</a>
+</p>
+
 **This is a lightweight path planning algorithm repository that currently supports the following algorithms: graph-based search algorithms (Astar and JPS), and sampling-based algorithms (RRT, RRT_Star, and Informed_RRT_Star).**
 
 ## 🔥 Features
