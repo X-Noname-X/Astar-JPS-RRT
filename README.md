@@ -28,16 +28,50 @@ cmake --build .
 ```
 
 ### Ubuntu
-To be completed
+1.Install OpenCV dependencies via the official Ubuntu repository/apt: No need to configure the path manually; the system will automatically recognize it during compilation:
+```bash
+# Update package sources
+sudo apt update
+# Install the OpenCV development package (includes header files and libraries)
+sudo apt install -y libopencv-dev
+```
+2.Installation and compilation of the project:
+```bash
+git clone https://github.com/X-Noname-X/Astar-JPS-RRT.git
+# Comment out the line "set(OpenCV_DIR "<Fill in your OpenCV unzipped path>")" in CMakeLists.txt
+set(OpenCV_DIR "<Fill in your OpenCV unzipped path>") ## Comment out this line
+# The following steps are the same as those on the Windows system
+mkdir build
+cd build
+cmake ..
+# Compile the project
+cmake --build .
+# Alternatively, you can use the following command to compile:
+# make
+```
 
 ## 🛠️ Running
 ### Windows
 - If everything goes well, you will see the following files in the path \Astar-JPS-RRT\build\bin\Debug: Astar.exe, JPS.exe, RRT_Series.exe
 - **Run directly by double-clicking the .exe files, or enter Astar.exe in the terminal**
+```bash
+# Run Astar
+\path\to\Astar-JPS-RRT\build\bin\Debug>Astar.exe
+# Run JPS
+\path\to\Astar-JPS-RRT\build\bin\Debug>JPS.exe
+# Run RRT
+\path\to\Astar-JPS-RRT\build\bin\Debug>RRT_Series.exe
+```
 - **Note:** Switch between RRT, RRT_star, and Informed_RRT_star by modifying the macro definitions (#define) in the main.cpp file under \Astar-JPS-RRT\Sample_Algorithms\RRT_Series\src
 
 ### Ubuntu
-To be completed
+After completing the installation and compilation, there are three executable files—Astar, JPS, and RRT_Series—in the path /Astar-JPS-RRT/build/bin. Run the following commands in the terminal:
+```bash
+cd /path/to/Astar-JPS-RRT/build/bin
+./Astar
+./JPS
+./RRT_Series
+```
 
 ## 🎮 Results
 Visualization for the Astar and JPS algorithms is currently not implemented.
